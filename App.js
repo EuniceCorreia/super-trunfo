@@ -1,27 +1,49 @@
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Button } from 'react-native/types_generated/index';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, Image, Button } from 'react-native';
+
 import { drivers } from './data/drivers';
 
 export default function App() {
-  //var driver = drivers[3];
-  const[driver, setDriver] = useState(drivers[0])
+  const [driver, setDriver] = useState(drivers[0]);
+
   
-  const changeDriver = () =>
-  {
-    setDriver(drivers[5]);
-      console.log(driver);
-  }
+  useEffect(() => {
+    // Intervalo para trocar o piloto a cada 5 segundos
+    const interval = setInterval(() => {
+      setDriver(prevDriver => {
+        // Pega o índice do piloto atual
+        const currentIndex = drivers.findIndex(d => d.id === prevDriver.id);
+        // Calcula o próximo índice, voltando ao 0 quando chegar no fim
+        const nextIndex = (currentIndex + 1) % drivers.length;
+        return drivers[nextIndex];
+      });
+    }, 5000);
+
+    // Limpa o intervalo quando o componente desmontar
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text>EUNICE</Text>
+      <Text style={{ fontSize: 20, marginBottom: 10 }}>{driver.name}</Text>
       <Image 
-      style ={styles.image}
-      source={{uri: driver.image}}/>
+        style={styles.image}
+        source={{ uri: driver.image }}
+      />
+      <Text>{driver.description}</Text>
+      <Text>Equipe: {driver.team}</Text>
+      <Text>País: {driver.country}</Text>
+      <Text>Estrelas: {'⭐'.repeat(driver.stars)}</Text>
       <Button 
-      title = 'Trocar piloto'
-      onPress={changeDriver}/>
+        title="Trocar Piloto Agora"
+        onPress={() => {
+          // Troca para o próximo piloto na lista
+          const currentIndex = drivers.findIndex(d => d.id === driver.id);
+          const nextIndex = (currentIndex + 1) % drivers.length;
+          setDriver(drivers[nextIndex]);
+        }}
+      />
       <StatusBar style="auto" />
     </View>
   );
@@ -33,11 +55,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 20,
   },
   image:{
     width: 200,
     height: 200,
     resizeMode: "contain",
-    marginBottom: 16
+    marginVertical: 16,
   }
 });
